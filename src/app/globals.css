@@ -6,14 +6,21 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary-dark-green: #1A3C34;
+  --secondary-white: #FFFFFF;
+  --text-gray: #4A4A4A;
+  --button-hover: #14352B;
+  --button-active: #102520;
+  --background: var(--secondary-white);
+  --foreground: var(--text-gray);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --primary-dark-green: #2E5D53;
+    --text-gray: #B0B0B0;
   }
 }
 
@@ -22,3 +29,182 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer components {
+  .form-card {
+    background-color: var(--primary-dark-green);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+  }
+
+  .form-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  @media (min-width: 640px) {
+    .form-card {
+      max-width: 28rem;
+      margin: 0 auto;
+    }
+  }
+
+  .input-field {
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .input-field:focus {
+    border-color: var(--primary-dark-green);
+    box-shadow: 0 0 0 3px rgba(26, 60, 52, 0.1);
+    outline: none;
+  }
+
+  .digit-input {
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    text-align: center;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .digit-input:focus {
+    border-color: var(--primary-dark-green);
+    box-shadow: 0 0 0 3px rgba(26, 60, 52, 0.1);
+    outline: none;
+  }
+
+  .phone-input {
+    border-color: #3b82f6;
+    padding: 0.5rem 0.75rem;
+    overflow: hidden;
+  }
+
+  .phone-input select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20' stroke-width='1.5' stroke='%233b82f6' class='w-5 h-5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+
+  .phone-input input {
+    padding-left: 0;
+  }
+
+  .btn-primary {
+    background-color: var(--primary-dark-green);
+    color: var(--secondary-white);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+    width: 100%;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--button-hover);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    background-color: var(--button-active);
+    transform: translateY(0);
+  }
+
+  .btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(26, 60, 52, 0.2);
+  }
+
+  .btn-primary:disabled {
+    background-color: #a0aec0;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  h1 {
+    color: var(--primary-dark-green);
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: var(--text-gray);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .error {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+   /* Dashboard-specific styles */
+  .balance-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .balance-card .carousel-indicator {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+  }
+  .balance-card .carousel-indicator span {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background-color: var(--gray-300);
+  }
+  .balance-card .carousel-indicator span.active {
+    background-color: var(--primary-dark-green);
+  }
+  .transaction-card {
+    background-color: var(--secondary-white);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+  }
+  .nav-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--secondary-white);
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-around;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .nav-menu .nav-item {
+    text-align: center;
+  }
+  .nav-menu .nav-item svg {
+    margin: 0 auto;
+  }
+}
+
+
+
+
+
+
+
