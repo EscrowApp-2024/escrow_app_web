@@ -6,6 +6,7 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import PersonIcon from "@mui/icons-material/Person";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { usePathname } from "next/navigation";
+import { JSX } from "react/jsx-runtime";
 
 // Define the shape of each navigation item
 interface NavItem {

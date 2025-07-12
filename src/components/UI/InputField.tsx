@@ -32,7 +32,7 @@ export default function InputField({
   return (
     <div className="w-full">
       <label className="block text-gray-600 mb-1">
-        {label}{required && <span className="text-red-500">*</span>}
+        {label}
       </label>
       <div className="input-field relative">
         <input

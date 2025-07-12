@@ -5,7 +5,7 @@ import { ApiResponseHandler } from "@/lib/ApiResponseHandler";
 interface FundWalletPayload {
     amount: number; // The amount to fund the wallet, must be >= 0.01
     currency: string; // The currency of the transaction (e.g., NGN, USD)
-    channel: "card" | "bank_transfer" | "pay_with_bank"; // The payment channel, restricted to specific values
+    channel: "bank_transfer" | "card" | "pay_with_bank"; // The payment channel, restricted to specific values
 }
 
 
@@ -31,13 +31,27 @@ export class WalletManagerService {
         const response = await apiClient.request(config);
         return ApiResponseHandler.handleResponse(response.data);
       } catch (error) {
-        return ApiResponseHandler.handleError(error);
+        return ApiResponseHandler.handleError(error);  
       }
     }
   
-    static async fundWallet(payload: FundWalletPayload, customHeaders: Record<string, string> = {}, walletId: string) {
-        const url = `/v1/fundWallet/:${walletId}`;
+    static async fundWallet(payload: FundWalletPayload, walletId: string, customHeaders: Record<string, string> = {},) {
+        const url = `/v1/wallet/fundWallet/${walletId}`;
         return this.makeRequest("post", url, payload, true, customHeaders); // Protected route, corrected method to POST and added URL
     }
-    
+
+    static async getWalletBalances(walletId: string, customHeaders: Record<string, string> = {}) {
+      const url = `/v1/wallet/getWalletBalances/${walletId}`;
+      return this.makeRequest("get", url, undefined, true, customHeaders); // Protected route, corrected method to POST and added URL
+   }
+
+   static async walletRecentTransactions(walletId: string, customHeaders: Record<string, string> = {}) {
+     const url = `/v1/wallet/walletRecentTransactions/${walletId}`;
+     return this.makeRequest("get", url, undefined, true, customHeaders); // Protected route, corrected method to POST and added URL
+   }
+
+   static async fundWalletProcessing(walletId: string, reference: string, customHeaders: Record<string, string> = {}) {
+    const url = `v1/wallet/fundWallet/processing/${walletId}/${reference}`;
+    return this.makeRequest("patch", url, undefined, true, customHeaders); // Protected route, corrected method to POST and added URL
+   }
 }

@@ -80,7 +80,7 @@ export class AuthService {
     static async register(payload: RegisterPayload, customHeaders: Record<string, string> = {}) {
       return this.makeRequest("post", "/v1/auth/createAccount", payload, false, customHeaders); // Public route
     }
-  
+   
     static async verifyEmail(payload: VerifyEmailPayload, customHeaders: Record<string, string> = {}) {
       return this.makeRequest("post", "/v1/auth/verify-account", payload, false, customHeaders); // Public route
     }

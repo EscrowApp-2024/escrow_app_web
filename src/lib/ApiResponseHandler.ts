@@ -7,6 +7,7 @@ interface ApiResponse {
 }
 
   interface ResponseHandlerResult {
+    statuscode?: string
     success: boolean;
     message: string;
     data?: any;
@@ -22,6 +23,7 @@ interface ApiResponse {
         };
       }
       return {
+        statuscode: response.statuscode,
         success: false,
         message: response.message,
       };

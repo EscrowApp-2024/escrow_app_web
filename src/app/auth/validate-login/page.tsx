@@ -12,20 +12,50 @@ import { setAuth } from "@/store/authSlice";
 import { RootState } from "@/store/store";
 import Cookies from "js-cookie";
 
+// Generate key pair and return public key as string, private key as CryptoKey
+/*
+async function generateKeyPair(): Promise<{
+  publicKey: string;
+  privateKey: CryptoKey;
+}> {
+  try {
+    if (!window.isSecureContext) {
+      throw new Error("This application requires a secure context (HTTPS)");
+    }
+
+    const keyPair = await window.crypto.subtle.generateKey(
+      {
+        name: "ECDSA",
+        namedCurve: "P-256",
+      },
+      false, // Non-extractable
+      ["sign", "verify"]
+    );
+
+    const publicKeyArrayBuffer = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+    const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKeyArrayBuffer)));
+
+    return {
+      publicKey: publicKeyBase64,
+      privateKey: keyPair.privateKey, // Keep as CryptoKey
+    };
+  } catch (error) {
+    throw new Error("Failed to generate key pair: " + error);
+  }
+}
+*/
 export default function ValidateLogin() {
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // For Sign In button
-  const [isResendLoading, setIsResendLoading] = useState(false); // New state for Resend Code link
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResendLoading, setIsResendLoading] = useState(false);
   const [responseMessage, setResponseMessage] = useState<{
     success: boolean;
     message: string;
     isNetworkError?: boolean;
   } | null>(null);
-  const [keyPair, setKeyPair] = useState<{ publicKey: string; privateKey: string } | null>(null);
-  const [keyPairError, setKeyPairError] = useState<string | null>(null);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -33,116 +63,39 @@ export default function ValidateLogin() {
   const { email, phoneNumber, fromPage } = useSelector((state: RootState) => state.auth);
   const otpMethod = searchParams.get("otpMethod");
 
-  // Function to convert binary to PEM format
-  function toPem(keyData: ArrayBuffer, type: string) {
-    const base64 = Buffer.from(keyData).toString("base64");
-    const pemHeader = type === "public" ? "-----BEGIN PUBLIC KEY-----" : "-----BEGIN PRIVATE KEY-----";
-    const pemFooter = type === "public" ? "-----END PUBLIC KEY-----" : "-----END PRIVATE KEY-----";
-    
-    // Wrap Base64 at 64 characters per line (PEM standard)
-    const wrappedBase64 = base64.match(/.{1,64}/g)?.join("\n") || "";
-    
-    // Construct PEM string
-    return `${pemHeader}\n${wrappedBase64}\n${pemFooter}`;
-  }
-
-  // Function to generate ECDSA key pair using Web Crypto API
-  const generateKeyPair = async () => {
-    try {
-      // Check if crypto.subtle is available
-      if (!crypto || !crypto.subtle) {
-        throw new Error("Web Crypto API (crypto.subtle) is not available. Ensure the page is loaded in a secure context (HTTPS or localhost).");
-      }
-
-      // Generate the key pair using Web Crypto API
-      const keyPair = await crypto.subtle.generateKey(
-        {
-          name: "ECDSA",
-          namedCurve: "P-256",
-        },
-        true, // Extractable
-        ["sign", "verify"] // Key usages
-      );
-
-      // Export the public key in SPKI format (binary)
-      const publicKeyBinary = await crypto.subtle.exportKey("spki", keyPair.publicKey);
-      // Export the private key in PKCS#8 format (binary)
-      const privateKeyBinary = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-
-      // Convert to PEM format
-      const publicKeyPem = toPem(publicKeyBinary, "public");
-      const privateKeyPem = toPem(privateKeyBinary, "private");
-
-      // Convert PEM strings to Base64 (matching Node.js output)
-      const base64PublicKey = Buffer.from(publicKeyPem).toString("base64");
-      const base64PrivateKey = Buffer.from(privateKeyPem).toString("base64");
-
-      return {
-        publicKey: base64PublicKey,
-        privateKey: base64PrivateKey,
-      };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to generate key pair: ${error.message}`);
-      } else {
-        throw new Error("Failed to generate key pair: Unknown error");
-      }
-    }
-  };
-
-  useEffect(() => {
-    const generateKeys = async () => {
-      try {
-        const keys = await generateKeyPair();
-        setKeyPair(keys);
-        setKeyPairError(null);
-      } catch (error) {
-        console.error("Failed to generate key pair:", error);
-        setKeyPairError((error as Error).message);
-      }
-    };
-    generateKeys();
-  }, []);
-
   useEffect(() => {
     if (!email || !otpMethod || !fromPage || !["login"].includes(fromPage)) {
       router.replace("/auth/login");
     }
   }, [email, otpMethod, router, fromPage]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const value = e.target.value.replace(/[^0-9]/g, "");
     if (value.length <= 1) {
       const newCode = [...code];
       newCode[index] = value;
       setCode(newCode);
-      console.log("Updated code array:", newCode);
 
       if (value && index < 5) {
         inputsRef.current[index + 1]?.focus();
       }
     }
-  };
+  }, [code]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === "Backspace" && !code[index] && index > 0) {
       const newCode = [...code];
       newCode[index - 1] = "";
       setCode(newCode);
       inputsRef.current[index - 1]?.focus();
     }
-  };
+  }, [code]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const codeString = code.join("");
-    console.log("code array:", code);
-    console.log("codeString:", codeString);
-    console.log("codeString length:", codeString.length);
-    console.log("Regex test:", /^\d{6}$/.test(codeString));
-    console.log("keyPair:", keyPair);
 
-    if (!codeString || !email || !/^\d{6}$/.test(codeString) || !keyPair) {
+    if (!codeString || !email || !/^\d{6}$/.test(codeString)) {
       setError("Please enter a valid 6-digit code.");
       return;
     }
@@ -152,41 +105,67 @@ export default function ValidateLogin() {
     setResponseMessage(null);
 
     try {
+      // Generate key pair on submit
+      //const { publicKey, privateKey } = await generateKeyPair();
+
       const payload = { 
         email, 
         code: codeString,
       };
-      const session_key: string = keyPair.publicKey;
+      //const session_key: string = publicKey;
 
+      /*
       const customHeaders = {
         "x-escrow_api-session_key": session_key,
-      };
-      const result = await AuthService.validateLogin(payload, customHeaders);
+      };*/
+      
+      const result = await AuthService.validateLogin(payload);
       setIsLoading(false);
 
       if (result.success) {
-        Cookies.set("x-escrow_api-key", keyPair.privateKey, { expires: 1, secure: true });
-        Cookies.set("x-escrow_api-session_key", keyPair.publicKey, { expires: 1, secure: true });
-        Cookies.set("sessionData", JSON.stringify(result.data.user_data), { expires: 1, secure: true });
-        Cookies.set("accessToken", result.data.access_token, { expires: 1, secure: true });
+        // Set publicKey in cookie
+        /*
+        Cookies.set("x-escrow_api-session_key", publicKey, { 
+          expires: 1, 
+          secure: true,
+          sameSite: 'strict'
+        });*/
+        
+        // Set other session data in cookies
+        Cookies.set("sessionData", JSON.stringify(result.data.user_data), {  
+          //secure: true,
+          sameSite: 'strict'
+        });
+        Cookies.set("accessToken", result.data.access_token, { 
+          expires: 1, 
+          //
+          // secure: true,
+          sameSite: 'strict'
+        });
 
+        // Store privateKey as CryptoKey in Redux
         dispatch(setAuth({
           user: result.data.user_data,
-          token: result.data.access_token
+          token: result.data.access_token,
+          //privateKey: privateKey
         }));
 
         setResponseMessage({ success: true, message: "Login successful" });
         setCode(["", "", "", "", "", ""]);
         setTimeout(() => {
           router.push("/dashboard");
-        }, 3000);
+        }, 2000);
       } else {
         setResponseMessage({ success: false, message: result.message });
       }
     } catch (error: any) {
       setIsLoading(false);
-      const errorResult = ApiResponseHandler.handleError(error);
-      setResponseMessage({ ...errorResult, isNetworkError: !error.response });
+      setResponseMessage({ 
+        success: false,
+        message: "Login failed. Please try again.",
+        isNetworkError: !error.response 
+      });
+      console.error("Login error:", error); // Log detailed error separately
     }
 
     setTimeout(() => setResponseMessage(null), 3000);
@@ -210,13 +189,13 @@ export default function ValidateLogin() {
 
   const handleResend = async () => {
     if (canResend && email && otpMethod) {
-      setIsResendLoading(true); // Use the new state
+      setIsResendLoading(true);
       setResponseMessage(null);
 
       try {
         const payload = { email, code_type: otpMethod };
         const result = await AuthService.resendCode(payload);
-        setIsResendLoading(false); // Use the new state
+        setIsResendLoading(false);
         
         if (result.success) {
           resetCountdown();
@@ -231,7 +210,7 @@ export default function ValidateLogin() {
           });
         }
       } catch (error: any) {
-        setIsResendLoading(false); // Use the new state
+        setIsResendLoading(false);
         const errorResult = ApiResponseHandler.handleError(error);
         setResponseMessage({ 
           ...errorResult, 
@@ -247,23 +226,8 @@ export default function ValidateLogin() {
     return <div>Loading...</div>;
   }
 
-  if (keyPairError) {
-    return (
-      <div className="bg-primary-dark-green p-4" style={{ paddingTop: "90px", minHeight: "100vh" }}>
-        <Header />
-        <div className="form-card bg-white p-6 rounded-lg shadow-md w-full max-w-md mx-auto">
-          <h1 className="text-2xl font-bold text-gray-800">Error</h1>
-          <p className="text-red-500 text-center">{keyPairError}</p>
-          <p className="text-gray-600 text-center mt-4">
-            Please ensure this page is loaded over HTTPS or on localhost, then refresh the page.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-primary-dark-green p-4" style={{ paddingTop: "80px", minHeight: "100vh" }}>
+    <div className="bg-primary-dark-green p-4" style={{ paddingTop: "90px", minHeight: "100vh" }}>
       <Header />
       {responseMessage && (
         <ApiResponseMessage
@@ -292,31 +256,33 @@ export default function ValidateLogin() {
           <div className="flex justify-center gap-2">
             {code.map((digit, index) => (
               <input
-                key={index}
-                type="tel"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={digit}
-                onChange={(e) => handleChange(e, index)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                maxLength={1}
-                className="w-12 h-12 text-center border border-gray-300 rounded-md focus:border-primary-dark-green focus:outline-none"
-                ref={(el) => {
-                  inputsRef.current[index] = el;
-                }}
-              />
+              key={index}
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={digit}
+              onChange={(e) => handleChange(e, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              maxLength={1}
+              className="w-11 h-11 text-center border border-gray-300 rounded-md dark:text-black focus:border-primary-dark-green focus:outline-none"
+              ref={(el) => {
+                inputsRef.current[index] = el;
+              }}
+            />
             ))}
           </div>
+
+          {error && <p className="text-red-500 text-center">{error}</p>}
 
           <div className="text-center">
             <p className="text-gray-600 mb-2">Didn't receive the code?</p>
             <button
               onClick={handleResend}
-              className={`text-blue-500 hover:underline ${(!canResend || isResendLoading) ? "pointer-events-none text-gray-400" : ""}`} // Use isResendLoading
-              disabled={!canResend || isResendLoading} // Use isResendLoading
+              className={`text-blue-500 hover:underline ${(!canResend || isResendLoading) ? "pointer-events-none text-gray-400" : ""}`} // Use isResendLoading here
+              disabled={!canResend || isResendLoading} // Use isResendLoading here
             >
               {canResend ? 
-                (isResendLoading ? "Resending..." : "Resend Code") : 
+                (isResendLoading ? "Resending..." : "Resend Code") : // Use isResendLoading here
                 `Resend Code (${Math.floor(timeLeft / 60)}:${timeLeft % 60 < 10 ? "0" : ""}${timeLeft % 60})`}
             </button>
           </div>
@@ -359,9 +325,6 @@ export default function ValidateLogin() {
         @media (max-width: 600px) {
           .form-card {
             min-height: 0 !important;
-          }
-          div {
-            overflow-y: auto;
           }
         }
       `}</style>

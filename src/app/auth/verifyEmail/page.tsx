@@ -27,7 +27,7 @@ export default function VerifyEmail() {
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
   const dispatch = useDispatch();
-  const { email, fromPage } = useSelector((state: RootState) => state.auth);
+  const { email, fromPage } = useSelector((state: RootState) => state.auth as { email: string; fromPage: string });
 
   // Check if the page is accessed from Register or Login
   useEffect(() => {
@@ -177,7 +177,7 @@ export default function VerifyEmail() {
                 onChange={(e) => handleChange(e, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 maxLength={1}
-                className="w-11 h-11 text-center border border-gray-300 rounded-md focus:border-primary-dark-green focus:outline-none"
+                className="w-11 h-11 text-center border border-gray-300 rounded-md dark:text-black focus:border-primary-dark-green focus:outline-none"
                 ref={(el) => {
                   inputsRef.current[index] = el;
                 }}

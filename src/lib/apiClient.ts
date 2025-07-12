@@ -1,68 +1,87 @@
 // lib/apiClient.ts
 import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig, AxiosRequestHeaders } from "axios";
 import Cookies from "js-cookie";
-import ApiKeyGenerator from "@/lib/api_authKey_generator";
+//import { redirectToLoginClient } from "@/lib/SessionManager";
+//import { store } from "@/store/store"; // Import your Redux store
 
-// Extend the Axios request config to include a flag for protected routes and custom headers
+// Extend the Axios request config
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   isProtected?: boolean;
-  method?: string; // Make method optional to match InternalAxiosRequestConfig
-  url?: string; // Make url optional to match InternalAxiosRequestConfig
-  headers: AxiosRequestHeaders; // Headers are non-optional as fixed previously
+  method?: string;
+  url?: string;
+  headers: AxiosRequestHeaders;
 }
 
+/*
+// Implement signData function using Web Crypto API
+async function signData(data: string, privateKey: CryptoKey): Promise<string> {
+  try {
+    const encoder = new TextEncoder();
+    const encodedData = encoder.encode(data);
+    const signature = await window.crypto.subtle.sign(
+      {
+        name: "ECDSA",
+        hash: { name: "SHA-256" },
+      },
+      privateKey,
+      encodedData
+    );
+    return btoa(String.fromCharCode(...new Uint8Array(signature)));
+  } catch (error) {
+    throw new Error("Failed to sign data: " + error);
+  }
+}*/
+
 const apiClient: AxiosInstance = axios.create({
-  baseURL: "/api", // Proxy endpoint to mask real backend URLs
-  timeout: 10000, // 10 seconds timeout
+  baseURL: "/api",
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Instantiate ApiKeyGenerator for signing data
-const authKeyGenerator = new ApiKeyGenerator();
-
-// Request Interceptor: Add headers for protected routes
+// Request Interceptor
 apiClient.interceptors.request.use(
   async (config: CustomAxiosRequestConfig) => {
-    // Start with any custom headers provided by the caller
     const headers: Record<string, string> = {
-      ...config.headers, // Merge custom headers from the config
+      ...config.headers,
     };
 
-    // If the route is protected, add the authentication headers
     if (config.isProtected) {
-      // Get the session key from cookies
+      // Get session key from cookies
+      /*
       const sessionKey = Cookies.get("x-escrow_api-session_key") || null;
-      const privateKey = Cookies.get("x-escrow_api-key") || null; // From the key pair generated during login
-      console.log(sessionKey, privateKey)
-
-      // Add x-escrow_api-session_key if available
       if (sessionKey) {
         headers["x-escrow_api-session_key"] = sessionKey;
-      }
+      }*/
 
-      // Add x-auth-token if available
+      // Get auth token from cookies
       const authToken = Cookies.get("accessToken") || null;
       if (authToken) {
         headers["x-auth-token"] = authToken;
       }
 
-      // Generate the x-escrow_app-signature if privateKey, method, and url are available
+      // Get private key from Redux state
+      
+      //const privateKey = store.getState().auth.privateKey; // Access Redux state directly
+
+      // Generate signature if privateKey, method, and url are available
+      /*
       if (privateKey && config.method && config.url) {
         const dataToSign = `${config.method.toUpperCase()} ${config.url}`;
         try {
-          const signature = await authKeyGenerator.signData(dataToSign, privateKey);
+          const signature = await signData(dataToSign, privateKey);
           headers["x-escrow_app-signature"] = signature;
         } catch (error) {
           console.error("Failed to sign data for x-escrow_app-signature:", error);
+          // Optionally reject the request here if signature is critical
+          // return Promise.reject(error);
         }
       } else {
         console.warn("Cannot generate x-escrow_app-signature: method, url, or privateKey is missing.");
-      }
+      }*/
     }
 
-    // Merge the headers into the config
     config.headers = {
       ...headers,
     } as AxiosRequestHeaders;
@@ -72,14 +91,17 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle global error responses
+// Response Interceptor
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
-    // Handle global errors (e.g., network issues, 500 errors)
     if (!error.response) {
       console.log(error);
       return Promise.reject({ message: "Network error. Please try again." });
+    }
+    // If 401/403 or other auth errors, redirect to login
+    if (error.response.status === 401 || error.response.status === 403) {
+      console.log("redirect to login")
     }
     return Promise.reject(error.response.data);
   }

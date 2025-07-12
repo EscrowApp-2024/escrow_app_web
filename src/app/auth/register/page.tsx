@@ -151,7 +151,7 @@ export default function Register() {
   };
 
   return (
-    <div className="bg-primary-dark-green p-4" style={{ paddingTop: "90px", minHeight: "100vh" }}>
+    <div className="Signup bg-primary-dark-green p-4" style={{ paddingTop: "90px", minHeight: "100vh" }}>
       <Header />
       {responseMessage && (
         <ApiResponseMessage
@@ -161,10 +161,7 @@ export default function Register() {
           isNetworkError={responseMessage.isNetworkError}
         />
       )}
-      <div className="form-card bg-white p-6 rounded-lg shadow-md w-full max-w-md mx-auto">
-        <button className="text-text-gray mb-4 focus:outline-none" aria-label="Back">
-          <MdArrowBack size={24} />
-        </button>
+      <div className="form-card w-full max-w-md mx-auto">
         <h1 className="text-2xl font-bold text-gray-800">Get Started</h1>
         <p className="text-gray-600 mb-6">Please fill in your details to continue</p>
 
@@ -279,7 +276,7 @@ export default function Register() {
                 ></path>
               </svg>
             ) : null}
-            {isLoading ? "Processing..." : "Create a Free Account"}
+            {isLoading ? "Processing..." : "Create Account"}
           </button>
         </form>
       </div>

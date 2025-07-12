@@ -1,6 +1,6 @@
+// store/authSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-// Define the Country interface
 interface Country {
   country_id: string;
   name: string;
@@ -8,7 +8,6 @@ interface Country {
   currency_code: string;
 }
 
-// Define the User interface
 interface User {
   user_id: string;
   user_email: string;
@@ -16,14 +15,14 @@ interface User {
   country: Country;
 }
 
-// Define the AuthState interface
 interface AuthState {
   email: string | null;
-  phoneNumber: string | null; // Add phoneNumber field
+  phoneNumber: string | null;
   fromPage: string | null;
   otpMethod: string | null;
   user: User | null;
   token: string | null;
+  privateKey: CryptoKey | null; // Changed to CryptoKey
 }
 
 const initialState: AuthState = {
@@ -33,6 +32,7 @@ const initialState: AuthState = {
   otpMethod: null,
   user: null,
   token: null,
+  privateKey: null,
 };
 
 const authSlice = createSlice({
@@ -51,9 +51,14 @@ const authSlice = createSlice({
     setOtpMethod: (state, action: PayloadAction<string>) => {
       state.otpMethod = action.payload;
     },
-    setAuth: (state, action: PayloadAction<{ user: User; token: string }>) => {
+    setAuth: (state, action: PayloadAction<{ 
+      user: User; 
+      token: string;
+      //privateKey: CryptoKey; // Changed to CryptoKey
+    }>) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
+      //state.privateKey = action.payload.privateKey;
       if (action.payload.user.user_email) {
         state.email = action.payload.user.user_email;
       }
@@ -65,6 +70,7 @@ const authSlice = createSlice({
       state.otpMethod = null;
       state.user = null;
       state.token = null;
+      state.privateKey = null;
     },
   },
 });
