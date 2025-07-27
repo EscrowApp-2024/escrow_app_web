@@ -2,15 +2,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Crypto } from "@peculiar/webcrypto";
-
 
 export default function Home() {
   const router = useRouter();
-
-  if (typeof window === "undefined" && !globalThis.crypto) {
-    globalThis.crypto = new Crypto() as any;
-  }
 
   const handleGetStarted = () => {
     router.push("/dashboard/settings");

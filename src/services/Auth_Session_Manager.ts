@@ -43,6 +43,9 @@ interface ValidateLoginPayload {
   code: string;
 }
 
+interface changemobileNumber {
+  mobile_number: string | null;
+}
 
 export class AuthService {
     // Define which routes are protected
@@ -105,5 +108,12 @@ export class AuthService {
     static async validateLogin(payload: ValidateLoginPayload, customHeaders: Record<string, string> = {}) {
       return this.makeRequest("post", "/v1/auth/validate-login", payload, false, customHeaders); // Protected route
     }
+
+    static async changeMobileNumber(payload: changemobileNumber, customHeaders: Record<string, string> = {}) {
+      return this.makeRequest("patch", "/v1/auth/change-mobile-number", payload, true, customHeaders); // Protected route
+    }
     
+    static async validateMobileChange(payload: changemobileNumber, customHeaders: Record<string, string> = {}) {
+      return this.makeRequest("patch", "/v1/auth/change-mobile-number/validate", payload, true, customHeaders); // Protected route
+    }
 }

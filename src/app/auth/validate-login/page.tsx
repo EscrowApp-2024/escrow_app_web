@@ -9,6 +9,7 @@ import { ApiResponseHandler } from "@/lib/ApiResponseHandler";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { setAuth } from "@/store/authSlice";
+
 import { RootState } from "@/store/store";
 import Cookies from "js-cookie";
 
@@ -61,6 +62,7 @@ export default function ValidateLogin() {
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
   const { email, phoneNumber, fromPage } = useSelector((state: RootState) => state.auth);
+
   const otpMethod = searchParams.get("otpMethod");
 
   useEffect(() => {
@@ -142,14 +144,20 @@ export default function ValidateLogin() {
           // secure: true,
           sameSite: 'strict'
         });
-
         // Store privateKey as CryptoKey in Redux
         dispatch(setAuth({
           user: result.data.user_data,
           token: result.data.access_token,
           //privateKey: privateKey
         }));
-
+        // Store user details in localStorage
+        const user_session_data = {
+          email: result.data.user_data.user_email,
+          first_name: result.data.user_data.firstName,
+          last_name: result.data.user_data.lastName,
+          mobile_number: result.data.user_data.mobile_number
+        }
+        localStorage.setItem("user_session_data", JSON.stringify(user_session_data))
         setResponseMessage({ success: true, message: "Login successful" });
         setCode(["", "", "", "", "", ""]);
         setTimeout(() => {

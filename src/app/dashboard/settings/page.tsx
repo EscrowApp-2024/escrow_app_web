@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Stack,
@@ -16,6 +16,8 @@ import {
   IconButton,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { RootState } from "@/store/store";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "@/lib/theme"; // Adjust path based on your project structure
 import darkTheme from "@/lib/theme"; // Adjust path if darkTheme is exported separately
@@ -36,18 +38,15 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import NavigationMenu from "@/components/UI/navigationMenu"; // Adjust path based on your project structure
 
-// Define the User interface
-interface User {
-  profileImage: string;
-  name: string;
+import { logoutUser } from "@/utils/logoutUser";
+
+
+interface user {
   email: string;
+  first_name: string;
+  last_name: string;
 }
 
-const user: User = {
-  profileImage: "https://example.com/profile.jpg", // Replace with actual image URL
-  name: "Shahane Lukyan",
-  email: "shahane@example.com",
-};
 
 // Hook to determine theme based on system preference
 const getTheme = (): any => {
@@ -61,7 +60,23 @@ const SettingsPage: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(
     typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
   );
+
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  const [userDetails, setUserdetails] = useState<user| null>(null)
+
+  useEffect(() => {
+    const getUserDetails = localStorage.getItem("user_session_data");
+    if (getUserDetails) {
+      const parsedDetails = JSON.parse(getUserDetails);
+      setUserdetails({
+        email: parsedDetails.email,
+        first_name: parsedDetails.first_name,
+        last_name: parsedDetails.last_name
+      })
+    }
+  }, []);
 
   const handleDarkModeToggle = () => {
     setDarkMode(!darkMode);
@@ -69,10 +84,9 @@ const SettingsPage: React.FC = () => {
   };
 
   const handleLogout = () => {
-    // Implement logout logic here (e.g., clear auth token, redirect to login)
-    console.log("Logging out...");
-    router.push("/login");
-  };
+  logoutUser(dispatch, router);
+};
+
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : theme}>
@@ -95,16 +109,16 @@ const SettingsPage: React.FC = () => {
         {/* Profile Section */}
         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 4 }}>
           <Avatar
-            src={user.profileImage}
-            alt={user.name}
+            src={userDetails?.first_name}
+            alt={userDetails?.first_name}
             sx={{ width: 64, height: 64, bgcolor: "primary.main" }}
           />
           <Stack>
             <Typography variant="h6" sx={{ color: "text.primary", fontWeight: 600 }}>
-              {user.name}
+              {userDetails?.first_name} {userDetails?.last_name}
             </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {user.email}
+              {userDetails?.email}
             </Typography>
           </Stack>
         </Stack>
@@ -114,23 +128,16 @@ const SettingsPage: React.FC = () => {
           Account
         </Typography>
         <List sx={{ bgcolor: "background.paper", borderRadius: "0.5rem", mb: 2 }}>
-          <ListItem onClick={() => router.push("/settings/edit-profile")}>
+          <ListItem onClick={() => router.push("/dashboard/settings/profile")}>
             <ListItemIcon>
               <PersonIcon sx={{ color: "text.primary" }} />
             </ListItemIcon>
-            <ListItemText primary="Edit Profile" sx={{ color: "text.primary" }} />
+            <ListItemText primary="Profile" sx={{ color: "text.primary" }} />
             <ChevronRightIcon sx={{ color: "text.secondary" }} />
           </ListItem>
           <Divider />
-          <ListItem onClick={() => router.push("/settings/privacy-security")}>
-            <ListItemIcon>
-              <LockIcon sx={{ color: "text.primary" }} />
-            </ListItemIcon>
-            <ListItemText primary="Privacy and Security" sx={{ color: "text.primary" }} />
-            <ChevronRightIcon sx={{ color: "text.secondary" }} />
-          </ListItem>
           <Divider />
-          <ListItem onClick={() => router.push("/settings/withdrawal-bank")}>
+          <ListItem onClick={() => router.push("/dashboard/settings/add-bank")}>
             <ListItemIcon>
               <AccountBalanceIcon sx={{ color: "text.primary" }} />
             </ListItemIcon>
@@ -145,6 +152,20 @@ const SettingsPage: React.FC = () => {
             <ListItemText primary="KYC" sx={{ color: "text.primary" }} />
             <ChevronRightIcon sx={{ color: "text.secondary" }} />
           </ListItem>
+        </List>
+
+        {/* Privacy and Security Section */}
+        <Typography variant="body1" sx={{ color: "text.secondary", fontWeight: 500, mb: 1 }}>
+         Privacy and Security
+        </Typography>
+        <List sx={{ bgcolor: "background.paper", borderRadius: "0.5rem", mb: 2 }}>
+          <ListItem onClick={() => router.push("/dashboard/settings/change-password")}>
+            <ListItemIcon>
+              <LockIcon sx={{ color: "text.primary" }} />
+            </ListItemIcon>
+            <ListItemText primary="Change Password" sx={{ color: "text.primary" }} />
+            <ChevronRightIcon sx={{ color: "text.secondary" }} />
+          </ListItem>  
         </List>
 
         {/* Preferences Section */}

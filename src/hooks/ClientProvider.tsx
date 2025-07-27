@@ -9,7 +9,7 @@ import { ReactNode } from "react";
 export default function ClientProvider({ children }: { children: ReactNode }) {
   return (
     <Provider store={store}>
-      <ThemeWrapper>{children}</ThemeWrapper>
+        <ThemeWrapper>{children}</ThemeWrapper>
     </Provider>
   );
 }

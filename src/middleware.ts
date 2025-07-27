@@ -46,6 +46,8 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
   const sessionData = request.cookies.get("sessionData")?.value;
 
+  //Also check if cookie accesToken is expired 
+
   // If missing cookies, redirect to login
   if (!accessToken || !sessionData) {
     const loginUrl = new URL("/auth/login", request.url);

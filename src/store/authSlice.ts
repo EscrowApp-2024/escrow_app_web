@@ -23,6 +23,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   privateKey: CryptoKey | null; // Changed to CryptoKey
+  pendingPhone: string | null;
 }
 
 const initialState: AuthState = {
@@ -33,6 +34,7 @@ const initialState: AuthState = {
   user: null,
   token: null,
   privateKey: null,
+  pendingPhone: null,
 };
 
 const authSlice = createSlice({
@@ -63,6 +65,9 @@ const authSlice = createSlice({
         state.email = action.payload.user.user_email;
       }
     },
+    setPendingPhone: (state, action: PayloadAction<string>) => {
+      state.pendingPhone = action.payload;
+    },
     clearAuth: (state) => {
       state.email = null;
       state.phoneNumber = null;
@@ -71,9 +76,10 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.privateKey = null;
+      state.pendingPhone = null;
     },
   },
 });
 
-export const { setEmail, setPhoneNumber, setFromPage, setOtpMethod, setAuth, clearAuth } = authSlice.actions;
+export const { setEmail, setPhoneNumber, setFromPage, setOtpMethod, setAuth, setPendingPhone, clearAuth,  } = authSlice.actions;
 export default authSlice.reducer;

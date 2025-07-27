@@ -8,6 +8,18 @@ interface FundWalletPayload {
     channel: "bank_transfer" | "card" | "pay_with_bank"; // The payment channel, restricted to specific values
 }
 
+interface VerifyBankPayload {
+    account_number: string; // Unique bank account number
+    bank_code: string; // Unique identifier for the bank (SWIFT, BIC, or other identifier) 
+}
+
+interface AddBankPayload {
+    bank_name: string;
+    account_number: string;
+    bank_code: string;
+    is_default?: boolean;
+}
+
 
 export class WalletManagerService {
 
@@ -46,12 +58,27 @@ export class WalletManagerService {
    }
 
    static async walletRecentTransactions(walletId: string, customHeaders: Record<string, string> = {}) {
-     const url = `/v1/wallet/walletRecentTransactions/${walletId}`;
+     const url = `/v1/wallet/walletTransactions/${walletId}?get=recent`;
      return this.makeRequest("get", url, undefined, true, customHeaders); // Protected route, corrected method to POST and added URL
    }
 
    static async fundWalletProcessing(walletId: string, reference: string, customHeaders: Record<string, string> = {}) {
     const url = `v1/wallet/fundWallet/processing/${walletId}/${reference}`;
     return this.makeRequest("patch", url, undefined, true, customHeaders); // Protected route, corrected method to POST and added URL
+   }
+
+   static async getAllBanks(customHeaders: Record<string, string> = {}) {
+    const url = `v1/wallet/get-all-banks`;
+    return this.makeRequest("get", url, undefined, true, customHeaders); // Protected route, corrected method to POST and added URL
+   }
+
+   static async verifyBankDetails(payload: VerifyBankPayload, customHeaders: Record<string, string> = {}) {
+    const url = `v1/wallet/verify-bank-details`;
+    return this.makeRequest("post", url, payload, true, customHeaders); // Protected route, corrected method to POST and added URL
+   }
+
+   static async addBankDetails(payload: AddBankPayload, walletId: string, customHeaders: Record<string, string> = {}) {
+    const url = `v1/wallet/add-bank-details/${walletId}`;
+    return this.makeRequest("post", url, payload, true, customHeaders); // Protected route, corrected method to POST and added URL
    }
 }

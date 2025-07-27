@@ -46,7 +46,8 @@ apiClient.interceptors.request.use(
     const headers: Record<string, string> = {
       ...config.headers,
     };
-
+    
+    console.log(`Done crypto`)
     if (config.isProtected) {
       // Get session key from cookies
       /*
